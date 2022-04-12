@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.customization.item;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
@@ -13,9 +13,9 @@ import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -31,7 +31,7 @@ public class AudioCustomizationItem extends CustomizationItem {
     private static final Logger LOGGER = LogManager.getLogger("fmaudio/AudioCustomizationItem");
 
     public List<MenuAudio> audios = new ArrayList<>();
-    public SoundSource channel = SoundSource.MASTER;
+    public SoundCategory channel = SoundCategory.MASTER;
     public boolean loop = true;
     public boolean oncePerSession = false;
 
@@ -49,7 +49,7 @@ public class AudioCustomizationItem extends CustomizationItem {
         String channelString = item.getEntryValue("channel");
         if (channelString != null) {
             try {
-                SoundSource soundSource = SoundSourceUtils.getSourceForName(channelString);
+                SoundCategory soundSource = SoundSourceUtils.getSourceForName(channelString);
                 if (soundSource != null) {
                     this.channel = soundSource;
                 } else {
@@ -139,33 +139,35 @@ public class AudioCustomizationItem extends CustomizationItem {
         }
 
         //Handle once-per-session
-        if (this.oncePerSession && AudioCustomizationItemHandler.startedOncePerSessionItems.containsKey(this.actionId)) {
-            this.alreadyPlayed = AudioCustomizationItemHandler.startedOncePerSessionItems.get(this.actionId).alreadyPlayed;
+        if (this.oncePerSession && ACIHandler.startedOncePerSessionItems.containsKey(this.actionId)) {
+            this.alreadyPlayed = ACIHandler.startedOncePerSessionItems.get(this.actionId).alreadyPlayed;
         }
         if (this.oncePerSession) {
             this.loop = false;
-            AudioCustomizationItemHandler.startedOncePerSessionItems.put(this.actionId, this);
+            ACIHandler.startedOncePerSessionItems.put(this.actionId, this);
         }
 
         //Load alreadyPlayed cache for non-loop items, if it's the same screen
         if (!this.oncePerSession) {
-            if (!this.loop && AudioCustomizationItemHandler.currentNonLoopItems.containsKey(this.actionId)) {
-                this.alreadyPlayed = AudioCustomizationItemHandler.currentNonLoopItems.get(this.actionId).alreadyPlayed;
+            if (!this.loop && ACIHandler.currentNonLoopItems.containsKey(this.actionId)) {
+                this.alreadyPlayed = ACIHandler.currentNonLoopItems.get(this.actionId).alreadyPlayed;
             }
             if (!this.loop) {
-                AudioCustomizationItemHandler.currentNonLoopItems.put(this.actionId, this);
+                ACIHandler.currentNonLoopItems.put(this.actionId, this);
             }
         }
 
-        if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
-            for (MenuAudio m : this.audios) {
-                if (AudioCustomizationItemHandler.lastPlayingAudioSources.contains(m.path)) {
-                    this.startAsynchronous(m, false);
-                    AudioCustomizationItemHandler.lastPlayingAudioSources.remove(m.path);
-                    if (!AudioCustomizationItemHandler.newLastPlayingAudioSources.contains(m.path)) {
-                        AudioCustomizationItemHandler.newLastPlayingAudioSources.add(m.path);
+        if (!ACIMuteHandler.isMuted(this.actionId)) {
+            if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
+                for (MenuAudio m : this.audios) {
+                    if (ACIHandler.lastPlayingAudioSources.contains(m.path)) {
+                        this.startAsynchronous(m, false);
+                        ACIHandler.lastPlayingAudioSources.remove(m.path);
+                        if (!ACIHandler.newLastPlayingAudioSources.contains(m.path)) {
+                            ACIHandler.newLastPlayingAudioSources.add(m.path);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -173,15 +175,15 @@ public class AudioCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack poseStack, Screen screen) {
+    public void render(MatrixStack poseStack, Screen screen) {
 
         if (this.shouldRender()) {
 
             if (isEditorActive()) {
 
                 RenderSystem.enableBlend();
-                RenderUtils.bindTexture(AUDIO_ELEMENT_TEXTURE);
-                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                Minecraft.getInstance().textureManager.bindTexture(AUDIO_ELEMENT_TEXTURE);
+                RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
                 blit(poseStack, this.getPosX(screen), this.getPosY(screen), 1.0F, 1.0F, this.width, this.height, this.width, this.height);
 
             }
@@ -194,8 +196,14 @@ public class AudioCustomizationItem extends CustomizationItem {
 
     public void tickAudio() {
 
-        //Only tick when not in editor
-        if (!isEditorActive()) {
+        if (ACIMuteHandler.isMuted(this.actionId) && (this.currentAudio != null)) {
+            this.currentAudio.getClip().stop();
+            ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
+            this.currentAudio = null;
+        }
+
+        //Only tick when not in editor and not muted
+        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId)) {
             if (!audios.isEmpty()) {
 
                 MenuAudio nextAudio = null;
@@ -211,8 +219,8 @@ public class AudioCustomizationItem extends CustomizationItem {
                 }
 
                 //Update volumes of audios in case MC volume should get changed while audios are playing
-                float masterVol = Minecraft.getInstance().options.getSoundSourceVolume(SoundSource.MASTER);
-                float itemChannelVol = Minecraft.getInstance().options.getSoundSourceVolume(this.channel);
+                float masterVol = Minecraft.getInstance().gameSettings.getSoundLevel(SoundCategory.MASTER);
+                float itemChannelVol = Minecraft.getInstance().gameSettings.getSoundLevel(this.channel);
                 if ((this.cachedMasterChannelVolume != masterVol) || (this.cachedItemChannelVolume != itemChannelVol)) {
                     for (MenuAudio a : this.audios) {
                         a.setVolume(a.volume);
@@ -273,7 +281,7 @@ public class AudioCustomizationItem extends CustomizationItem {
         if (!this.isLoadingNextAudio && ((this.currentAudio == null) || !this.currentAudio.isPlaying())) {
 
             if (this.currentAudio != null) {
-                AudioCustomizationItemHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
+                ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
             }
 
             this.isLoadingNextAudio = true;
@@ -319,8 +327,8 @@ public class AudioCustomizationItem extends CustomizationItem {
                         }
                     }
 
-                    if (!AudioCustomizationItemHandler.lastPlayingAudioSources.contains(audio.path)) {
-                        AudioCustomizationItemHandler.lastPlayingAudioSources.add(audio.path);
+                    if (!ACIHandler.lastPlayingAudioSources.contains(audio.path)) {
+                        ACIHandler.lastPlayingAudioSources.add(audio.path);
                     }
                     this.currentAudio = audio;
 
@@ -413,8 +421,8 @@ public class AudioCustomizationItem extends CustomizationItem {
 
             float newVolFloat = this.volume;
 
-            if (this.parent.channel != SoundSource.MASTER) {
-                float mcVol = Minecraft.getInstance().options.getSoundSourceVolume(this.parent.channel) * 100.0F;
+            if (this.parent.channel != SoundCategory.MASTER) {
+                float mcVol = Minecraft.getInstance().gameSettings.getSoundLevel(this.parent.channel) * 100.0F;
                 float clipVolOnePercent = ((float)this.volume) / 100.0F;
                 newVolFloat = clipVolOnePercent * mcVol;
             }

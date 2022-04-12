@@ -1,5 +1,5 @@
 modLoader="javafml"
-loaderVersion="[38,)"
+loaderVersion="[33,37)"
 license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
 [[mods]]
 modId="fmextension_audio"
@@ -27,19 +27,19 @@ side="BOTH"
 modId="auudio"
 mandatory=true
 ordering="AFTER"
-versionRange="[1.0.1,)"
+versionRange="[1.0.2,)"
 side="BOTH"
 
 [[dependencies.fmextension_audio]]
 modId="forge"
 mandatory=true
-versionRange="[38,)"
+versionRange="[33,)"
 ordering="NONE"
 side="CLIENT"
 
 [[dependencies.fmextension_audio]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.18,)"
+versionRange="[1.16,)"
 ordering="NONE"
 side="CLIENT"

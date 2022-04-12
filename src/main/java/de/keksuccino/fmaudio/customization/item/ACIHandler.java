@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fmaudio.audio.AudioHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.client.event.ScreenEvent;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraftforge.client.event.GuiScreenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AudioCustomizationItemHandler {
+public class ACIHandler {
 
-    private static Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
+    private static final Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
 
     public static List<String> lastPlayingAudioSources = new ArrayList<>();
     public static List<String> newLastPlayingAudioSources = new ArrayList<>();
@@ -35,7 +35,8 @@ public class AudioCustomizationItemHandler {
     protected static Screen lastScreen = null;
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.register(new AudioCustomizationItemHandler());
+        MinecraftForge.EVENT_BUS.register(new ACIHandler());
+        ACIMuteHandler.init();
     }
 
     @SubscribeEvent
@@ -54,28 +55,28 @@ public class AudioCustomizationItemHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onButtonsCachedPre(ButtonCachedEvent e) {
-        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
+        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getGui())) {
             currentNonLoopItems.clear();
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onButtonsCachedPost(ButtonCachedEvent e) {
-        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
+        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getGui())) {
             stopLastPlayingAudios();
         }
     }
 
     @SubscribeEvent
-    public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
-        if (e.getScreen() instanceof LayoutEditorScreen) {
+    public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
+        if (e.getGui() instanceof LayoutEditorScreen) {
             AudioHandler.stopAll();
         }
     }
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent e) {
-        Screen current = Minecraft.getInstance().screen;
+        Screen current = Minecraft.getInstance().currentScreen;
         if ((current == null) && (lastScreen != null)) {
             AudioHandler.stopAll();
         }

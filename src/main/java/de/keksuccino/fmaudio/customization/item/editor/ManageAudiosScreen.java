@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
@@ -11,8 +11,8 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.awt.*;
 
@@ -30,7 +30,7 @@ public class ManageAudiosScreen extends Screen {
 
     public ManageAudiosScreen(LayoutEditorScreen handler, AudioLayoutEditorElement element) {
 
-        super(new TextComponent(""));
+        super(new StringTextComponent(""));
 
         this.handler = handler;
         this.element = element;
@@ -43,7 +43,7 @@ public class ManageAudiosScreen extends Screen {
                     }
                 }
             });
-            Minecraft.getInstance().setScreen(s);
+            Minecraft.getInstance().displayGuiScreen(s);
         });
         UIBase.colorizeButton(this.addAudioButton);
 
@@ -53,13 +53,13 @@ public class ManageAudiosScreen extends Screen {
                     FMYesNoPopup p = new FMYesNoPopup(300, new Color(0, 0, 0, 0), 240, (call2) -> {
                         if (call2) {
                             this.getItem().audios.remove(call);
-                            Minecraft.getInstance().setScreen(this);
+                            Minecraft.getInstance().displayGuiScreen(this);
                         }
                     }, StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.remove.confirm"), "%n%"));
                     PopupHandler.displayPopup(p);
                 }
             });
-            Minecraft.getInstance().setScreen(s);
+            Minecraft.getInstance().displayGuiScreen(s);
         });
         UIBase.colorizeButton(this.removeAudioButton);
 
@@ -68,15 +68,15 @@ public class ManageAudiosScreen extends Screen {
                 if (call != null) {
                     //Do nothing with callback, since audio is already part of the element
                     EditAudioScreen s2 = new EditAudioScreen(this, this.element, call, (call2) -> {});
-                    Minecraft.getInstance().setScreen(s2);
+                    Minecraft.getInstance().displayGuiScreen(s2);
                 }
             });
-            Minecraft.getInstance().setScreen(s);
+            Minecraft.getInstance().displayGuiScreen(s);
         });
         UIBase.colorizeButton(this.editAudioButton);
 
         this.backButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.fmaudio.back"), true, (press) -> {
-            Minecraft.getInstance().setScreen(this.handler);
+            Minecraft.getInstance().displayGuiScreen(this.handler);
             this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
         });
         UIBase.colorizeButton(this.backButton);
@@ -88,7 +88,7 @@ public class ManageAudiosScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
 
         int xCenter = this.width / 2;
         int yCenter = this.height / 2;
@@ -118,8 +118,8 @@ public class ManageAudiosScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
-        Minecraft.getInstance().setScreen(this.handler);
+    public void closeScreen() {
+        Minecraft.getInstance().displayGuiScreen(this.handler);
         this.handler.history.saveSnapshot(this.handler.history.createSnapshot());
     }
 

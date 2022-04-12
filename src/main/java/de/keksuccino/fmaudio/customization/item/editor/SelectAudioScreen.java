@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fmaudio.customization.item.AudioCustomizationItem;
@@ -14,15 +14,16 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class SelectAudioScreen extends Screen {
@@ -41,7 +42,7 @@ public class SelectAudioScreen extends Screen {
 
     public SelectAudioScreen(Screen parent, AudioLayoutEditorElement element, Consumer<AudioCustomizationItem.MenuAudio> callback) {
 
-        super(new TextComponent(""));
+        super(new StringTextComponent(""));
         this.parent = parent;
         this.callback = callback;
         this.element = element;
@@ -51,7 +52,7 @@ public class SelectAudioScreen extends Screen {
 
         this.backButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.fmaudio.back"), true, (press) -> {
             this.onCancel();
-            Minecraft.getInstance().setScreen(this.parent);
+            Minecraft.getInstance().displayGuiScreen(this.parent);
         });
         UIBase.colorizeButton(this.backButton);
 
@@ -91,9 +92,9 @@ public class SelectAudioScreen extends Screen {
 
     //On Esc
     @Override
-    public void onClose() {
+    public void closeScreen() {
         this.onCancel();
-        Minecraft.getInstance().setScreen(this.parent);
+        Minecraft.getInstance().displayGuiScreen(this.parent);
     }
 
     @Override
@@ -102,7 +103,7 @@ public class SelectAudioScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
 
         int xCenter = this.width / 2;
 
@@ -130,7 +131,7 @@ public class SelectAudioScreen extends Screen {
 
         for (ScrollAreaEntry e : this.audiosScrollList.getEntries()) {
             if (e instanceof AudioScrollAreaEntry) {
-                if (e.isHoveredOrFocused()) {
+                if (e.isHovered()) {
                     String sourceTypeString = Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local");
                     if (((AudioScrollAreaEntry)e).audio.soundType == AudioClip.SoundType.EXTERNAL_WEB) {
                         sourceTypeString = Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_web");
@@ -145,13 +146,13 @@ public class SelectAudioScreen extends Screen {
 
     }
 
-    protected static void renderDescription(PoseStack matrix, List<String> desc, int mouseX, int mouseY) {
+    protected static void renderDescription(MatrixStack matrix, List<String> desc, int mouseX, int mouseY) {
         if (desc != null) {
             int width = 10;
             int height = 10;
             //Getting the longest string from the list to render the background with the correct width
             for (String s : desc) {
-                int i = Minecraft.getInstance().font.width(s) + 10;
+                int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
                 if (i > width) {
                     width = i;
                 }
@@ -159,10 +160,10 @@ public class SelectAudioScreen extends Screen {
             }
             mouseX += 5;
             mouseY += 5;
-            if (Minecraft.getInstance().screen.width < mouseX + width) {
+            if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
                 mouseX -= width + 10;
             }
-            if (Minecraft.getInstance().screen.height < mouseY + height) {
+            if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
                 mouseY -= height + 10;
             }
             RenderUtils.setZLevelPre(matrix, 600);
@@ -170,7 +171,7 @@ public class SelectAudioScreen extends Screen {
             RenderSystem.enableBlend();
             int i2 = 5;
             for (String s : desc) {
-                drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+                drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
                 i2 += 10;
             }
             RenderUtils.setZLevelPost(matrix);
@@ -178,8 +179,8 @@ public class SelectAudioScreen extends Screen {
         }
     }
 
-    protected static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
-        Gui.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+    protected static void renderDescriptionBackground(MatrixStack matrix, int x, int y, int width, int height) {
+        AbstractGui.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
     }
 
     protected static void colorizeButton(AdvancedButton b) {
@@ -189,7 +190,7 @@ public class SelectAudioScreen extends Screen {
     public static class AudioScrollAreaEntry extends ScrollAreaEntry {
 
         protected AudioCustomizationItem.MenuAudio audio;
-        protected Font font = Minecraft.getInstance().font;
+        protected FontRenderer font = Minecraft.getInstance().fontRenderer;
         protected SelectAudioScreen parentScreen;
 
         protected boolean isMouseDown = false;
@@ -201,20 +202,20 @@ public class SelectAudioScreen extends Screen {
         }
 
         @Override
-        public void renderEntry(PoseStack matrix) {
+        public void renderEntry(MatrixStack matrix) {
 
             int center = this.x + (this.getWidth() / 2);
 
-            if (!this.isHoveredOrFocused()) {
+            if (!this.isHovered()) {
                 fill(matrix, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), ENTRY_BACKGROUND_COLOR.getRGB());
             } else {
                 fill(matrix, this.x, this.y, this.x + this.getWidth(), this.y + this.getHeight(), ENTRY_BACKGROUND_COLOR.brighter().brighter().getRGB());
             }
 
             String sourceString = this.audio.path;
-            if (font.width(sourceString) > this.getWidth() - 30) {
+            if (font.getStringWidth(sourceString) > this.getWidth() - 30) {
                 sourceString = new StringBuilder(sourceString).reverse().toString();
-                sourceString = font.plainSubstrByWidth(sourceString, this.getWidth() - 30);
+                sourceString = font.trimStringToWidth(sourceString, this.getWidth() - 30);
                 sourceString = new StringBuilder(sourceString).reverse().toString();
                 sourceString = ".." + sourceString;
             }
@@ -226,9 +227,9 @@ public class SelectAudioScreen extends Screen {
 
         protected void handleSelection() {
 
-            if (!PopupHandler.isPopupActive() && !this.parentScreen.backButton.isHoveredOrFocused()) {
+            if (!PopupHandler.isPopupActive() && !this.parentScreen.backButton.isHovered()) {
                 if (MouseInput.isLeftMouseDown() && !this.isMouseDown) {
-                    if (this.isHoveredOrFocused()) {
+                    if (this.isHovered()) {
                         if (this.parentScreen.callback != null) {
                             this.parentScreen.callback.accept(this.audio);
                         }

@@ -2,25 +2,24 @@ package de.keksuccino.fmaudio;
 
 import java.io.File;
 
+import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
+import de.keksuccino.fancymenu.api.visibilityrequirements.VisibilityRequirementRegistry;
+import de.keksuccino.fmaudio.customization.buttonaction.ToggleMuteButtonAction;
 import de.keksuccino.fmaudio.customization.item.AudioCustomizationItemContainer;
-import de.keksuccino.fmaudio.customization.item.AudioCustomizationItemHandler;
+import de.keksuccino.fmaudio.customization.item.ACIHandler;
+import de.keksuccino.fmaudio.customization.visibilityrequirement.IsAudioMutedVisibilityRequirement;
 import de.keksuccino.konkrete.localization.Locals;
-import net.minecraft.resources.ResourceLocation;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.config.Config;
 import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-//TODO "toggle mute audio element" button action adden
-// - setzt "mute" boolean in audio element anhand der action ID auf true/false
-// - mute state von elementen wird in file gespeichert (anhand von action ID)
-
-//TODO change icon of audio element in editor to music note (same icon as used for Auudio)
 
 @Mod("fmextension_audio")
 public class FmAudio {
@@ -30,6 +29,7 @@ public class FmAudio {
 	private static final Logger LOGGER = LogManager.getLogger("fmaudio/FmAudio");
 
 	public static final File MOD_DIR = new File("config/fancymenu/extensions/fmaudio");
+	public static final File INSTANCE_DATA_DIR = new File("fancymenu_instance_data/extensions/fmaudio");
 
 	public static Config config;
 
@@ -39,16 +39,26 @@ public class FmAudio {
 			//Check if mod was loaded client- or server-side
 			if (FMLEnvironment.dist == Dist.CLIENT) {
 
-				if (!MOD_DIR.exists()) {
+				if (!MOD_DIR.isDirectory()) {
 					MOD_DIR.mkdirs();
+				}
+
+				if (!INSTANCE_DATA_DIR.isDirectory()) {
+					INSTANCE_DATA_DIR.mkdirs();
 				}
 
 				updateConfig();
 
-				AudioCustomizationItemHandler.init();
+				ACIHandler.init();
 
 				//Register audio item container
 				CustomizationItemRegistry.registerItem(new AudioCustomizationItemContainer());
+				//Register "Toggle Mute" button action
+				ButtonActionRegistry.registerButtonAction(new ToggleMuteButtonAction());
+				//Register "Is Muted" visibility requirement
+				VisibilityRequirementRegistry.registerRequirement(new IsAudioMutedVisibilityRequirement());
+
+				MinecraftForge.EVENT_BUS.register(new EventHandler());
 
 				Konkrete.addPostLoadingEvent("fmextension_audio", this::onClientSetup);
 
@@ -89,7 +99,7 @@ public class FmAudio {
 
 			config = new Config(MOD_DIR.getPath() + "/config.cfg");
 
-			config.registerValue("dummy_value", false, "general");
+			config.registerValue("stop_world_music_in_menu", false, "world");
 
 			config.syncConfig();
 

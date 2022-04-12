@@ -1,6 +1,6 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -18,7 +18,7 @@ import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screen.Screen;
 
 import javax.annotation.Nullable;
 import java.awt.*;
@@ -55,12 +55,12 @@ public class EditAudioScreen extends ScrollableScreen {
     @Override
     public boolean isOverlayButtonHovered() {
         if (this.doneButton != null) {
-            if (this.doneButton.isHoveredOrFocused()) {
+            if (this.doneButton.isHovered()) {
                 return true;
             }
         }
         if (this.cancelButton != null) {
-            if (this.cancelButton.isHoveredOrFocused()) {
+            if (this.cancelButton.isHovered()) {
                 return true;
             }
         }
@@ -79,26 +79,29 @@ public class EditAudioScreen extends ScrollableScreen {
             this.scrollArea.removeEntry(e);
         }
 
-        // SOURCE TYPE [LOCAL/WEB] -------------
-        AdvancedButton sourceTypeButton = new AdvancedButton(0, 0, 200, 20, "", true, (press) -> {
-            if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
-                audio.soundType = AudioClip.SoundType.EXTERNAL_WEB;
-            } else if (audio.soundType == AudioClip.SoundType.EXTERNAL_WEB) {
-                audio.soundType = AudioClip.SoundType.EXTERNAL_LOCAL;
-            }
-        }) {
-            @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
-                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local"));
-                } else {
-                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_web"));
-                }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.scrollArea.addEntry(new ButtonEntry(this.scrollArea, sourceTypeButton));
-        //--------------------------------------
+        this.scrollArea.addEntry(new EmptySpaceEntry(this.scrollArea, 10));
+
+        //TODO re-implement after stabilizing web sources in Auudio
+//        // SOURCE TYPE [LOCAL/WEB] -------------
+//        AdvancedButton sourceTypeButton = new AdvancedButton(0, 0, 200, 20, "", true, (press) -> {
+//            if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
+//                audio.soundType = AudioClip.SoundType.EXTERNAL_WEB;
+//            } else if (audio.soundType == AudioClip.SoundType.EXTERNAL_WEB) {
+//                audio.soundType = AudioClip.SoundType.EXTERNAL_LOCAL;
+//            }
+//        }) {
+//            @Override
+//            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+//                if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
+//                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local"));
+//                } else {
+//                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_web"));
+//                }
+//                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+//            }
+//        };
+//        this.scrollArea.addEntry(new ButtonEntry(this.scrollArea, sourceTypeButton));
+//        //--------------------------------------
 
         // SOURCE ------------------------------
         AdvancedButton chooseSourceButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.fmaudio.audio.choosesource"), true, (press) -> {
@@ -142,17 +145,17 @@ public class EditAudioScreen extends ScrollableScreen {
         TextEntry indexLabelEntry = new TextEntry(this.scrollArea, Locals.localize("fancymenu.fmaudio.audio.index"), true);
         indexLabelEntry.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.index.desc"), "%n%"));
         this.scrollArea.addEntry(indexLabelEntry);
-        AdvancedTextField indexTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
+        AdvancedTextField indexTextField = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-                if (MathUtils.isInteger(this.getValue().replace(" ", ""))) {
-                    audio.index = Integer.parseInt(this.getValue().replace(" ", ""));
+                if (MathUtils.isInteger(this.getText().replace(" ", ""))) {
+                    audio.index = Integer.parseInt(this.getText().replace(" ", ""));
                 }
             }
         };
-        indexTextField.setMaxLength(10000);
-        indexTextField.setValue("" + audio.index);
+        indexTextField.setMaxStringLength(10000);
+        indexTextField.setText("" + audio.index);
         TextFieldEntry indexFieldEntry = new TextFieldEntry(this.scrollArea, indexTextField);
         indexFieldEntry.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.index.desc"), "%n%"));
         this.scrollArea.addEntry(indexFieldEntry);
@@ -162,17 +165,17 @@ public class EditAudioScreen extends ScrollableScreen {
         TextEntry volumeLabelEntry = new TextEntry(this.scrollArea, Locals.localize("fancymenu.fmaudio.audio.volume"), true);
         volumeLabelEntry.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.volume.desc"), "%n%"));
         this.scrollArea.addEntry(volumeLabelEntry);
-        AdvancedTextField volumeTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
+        AdvancedTextField volumeTextField = new AdvancedTextField(Minecraft.getInstance().fontRenderer, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-                if (MathUtils.isInteger(this.getValue().replace(" ", ""))) {
-                    audio.volume = Integer.parseInt(this.getValue().replace(" ", ""));
+                if (MathUtils.isInteger(this.getText().replace(" ", ""))) {
+                    audio.volume = Integer.parseInt(this.getText().replace(" ", ""));
                 }
             }
         };
-        volumeTextField.setMaxLength(10000);
-        volumeTextField.setValue("" + audio.volume);
+        volumeTextField.setMaxStringLength(10000);
+        volumeTextField.setText("" + audio.volume);
         TextFieldEntry volumeFieldEntry = new TextFieldEntry(this.scrollArea, volumeTextField);
         volumeFieldEntry.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.volume.desc"), "%n%"));
         this.scrollArea.addEntry(volumeFieldEntry);
@@ -180,13 +183,13 @@ public class EditAudioScreen extends ScrollableScreen {
 
         this.doneButton = new AdvancedButton(0, 0, 95, 20, Locals.localize("fancymenu.fmaudio.done"), true, (press) -> {
             this.onDone();
-            Minecraft.getInstance().setScreen(this.parent);
+            Minecraft.getInstance().displayGuiScreen(this.parent);
         });
         UIBase.colorizeButton(this.doneButton);
 
         this.cancelButton = new AdvancedButton(0, 0, 95, 20, Locals.localize("fancymenu.fmaudio.cancel"), true, (press) -> {
             this.onCancel();
-            Minecraft.getInstance().setScreen(this.parent);
+            Minecraft.getInstance().displayGuiScreen(this.parent);
         });
         UIBase.colorizeButton(this.cancelButton);
 
@@ -197,7 +200,7 @@ public class EditAudioScreen extends ScrollableScreen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
 
         int xCenter = this.width / 2;
 
@@ -221,7 +224,7 @@ public class EditAudioScreen extends ScrollableScreen {
     }
 
     @Override
-    public void onClose() {
+    public void closeScreen() {
         if (!PopupHandler.isPopupActive()) {
             if (this.isNewAudio) {
                 this.onCancel();

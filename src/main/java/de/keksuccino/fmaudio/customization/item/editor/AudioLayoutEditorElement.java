@@ -1,6 +1,6 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.matrix.MatrixStack;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
@@ -10,7 +10,7 @@ import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.SoundCategory;
 
 public class AudioLayoutEditorElement extends LayoutEditorElement {
 
@@ -29,37 +29,37 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
 
         AdvancedButton manageAudiosButton = new AdvancedButton(0, 0, 0, 0, Locals.localize("fancymenu.fmaudio.audio.manage"), (press) -> {
             ManageAudiosScreen s = new ManageAudiosScreen(this.handler, this);
-            Minecraft.getInstance().setScreen(s);
+            Minecraft.getInstance().displayGuiScreen(s);
             this.rightclickMenu.closeMenu();
         });
         manageAudiosButton.setDescription(StringUtils.splitLines(Locals.localize("fancymenu.fmaudio.audio.manage.desc"), "%n%"));
         this.rightclickMenu.addContent(manageAudiosButton);
 
         AdvancedButton channelButton = new AdvancedButton(0, 0, 0, 0, "", (press) -> {
-            if (i.channel == SoundSource.MASTER) {
-                i.channel = SoundSource.MUSIC;
-            } else if (i.channel == SoundSource.MUSIC) {
-                i.channel = SoundSource.RECORDS;
-            } else if (i.channel == SoundSource.RECORDS) {
-                i.channel = SoundSource.WEATHER;
-            } else if (i.channel == SoundSource.WEATHER) {
-                i.channel = SoundSource.BLOCKS;
-            } else if (i.channel == SoundSource.BLOCKS) {
-                i.channel = SoundSource.HOSTILE;
-            } else if (i.channel == SoundSource.HOSTILE) {
-                i.channel = SoundSource.NEUTRAL;
-            } else if (i.channel == SoundSource.NEUTRAL) {
-                i.channel = SoundSource.PLAYERS;
-            } else if (i.channel == SoundSource.PLAYERS) {
-                i.channel = SoundSource.AMBIENT;
-            } else if (i.channel == SoundSource.AMBIENT) {
-                i.channel = SoundSource.VOICE;
-            } else if (i.channel == SoundSource.VOICE) {
-                i.channel = SoundSource.MASTER;
+            if (i.channel == SoundCategory.MASTER) {
+                i.channel = SoundCategory.MUSIC;
+            } else if (i.channel == SoundCategory.MUSIC) {
+                i.channel = SoundCategory.RECORDS;
+            } else if (i.channel == SoundCategory.RECORDS) {
+                i.channel = SoundCategory.WEATHER;
+            } else if (i.channel == SoundCategory.WEATHER) {
+                i.channel = SoundCategory.BLOCKS;
+            } else if (i.channel == SoundCategory.BLOCKS) {
+                i.channel = SoundCategory.HOSTILE;
+            } else if (i.channel == SoundCategory.HOSTILE) {
+                i.channel = SoundCategory.NEUTRAL;
+            } else if (i.channel == SoundCategory.NEUTRAL) {
+                i.channel = SoundCategory.PLAYERS;
+            } else if (i.channel == SoundCategory.PLAYERS) {
+                i.channel = SoundCategory.AMBIENT;
+            } else if (i.channel == SoundCategory.AMBIENT) {
+                i.channel = SoundCategory.VOICE;
+            } else if (i.channel == SoundCategory.VOICE) {
+                i.channel = SoundCategory.MASTER;
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 this.setMessage(Locals.localize("fancymenu.fmaudio.audio.channel", i.channel.getName().toUpperCase()));
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
@@ -74,7 +74,7 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.oncePerSession) {
                     this.active = false;
                 } else {
@@ -98,7 +98,7 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(MatrixStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.oncePerSession) {
                     this.setMessage(Locals.localize("fancymenu.fmaudio.audio.once_per_session.on"));
                 } else {

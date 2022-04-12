@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.gui;
 
+import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.konkrete.gui.content.AdvancedButton;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
@@ -11,10 +11,10 @@ import de.keksuccino.konkrete.gui.screens.popup.PopupHandler;
 import de.keksuccino.konkrete.input.MouseInput;
 import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.client.gui.AbstractGui;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.util.text.StringTextComponent;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -33,7 +33,7 @@ public class ScrollableScreen extends Screen {
 
     public ScrollableScreen(Screen parent, String title) {
 
-        super(new TextComponent(""));
+        super(new StringTextComponent(""));
         this.parent = parent;
         this.title = title;
 
@@ -52,9 +52,9 @@ public class ScrollableScreen extends Screen {
 
     //On Esc
     @Override
-    public void onClose() {
+    public void closeScreen() {
         if (!PopupHandler.isPopupActive()) {
-            Minecraft.getInstance().setScreen(this.parent);
+            Minecraft.getInstance().displayGuiScreen(this.parent);
         }
     }
 
@@ -64,7 +64,7 @@ public class ScrollableScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(MatrixStack matrix, int mouseX, int mouseY, float partialTicks) {
 
         RenderSystem.enableBlend();
 
@@ -101,13 +101,13 @@ public class ScrollableScreen extends Screen {
 
     }
 
-    protected static void renderDescription(PoseStack matrix, List<String> desc, int mouseX, int mouseY) {
+    protected static void renderDescription(MatrixStack matrix, List<String> desc, int mouseX, int mouseY) {
         if (desc != null) {
             int width = 10;
             int height = 10;
             //Getting the longest string from the list to render the background with the correct width
             for (String s : desc) {
-                int i = Minecraft.getInstance().font.width(s) + 10;
+                int i = Minecraft.getInstance().fontRenderer.getStringWidth(s) + 10;
                 if (i > width) {
                     width = i;
                 }
@@ -115,10 +115,10 @@ public class ScrollableScreen extends Screen {
             }
             mouseX += 5;
             mouseY += 5;
-            if (Minecraft.getInstance().screen.width < mouseX + width) {
+            if (Minecraft.getInstance().currentScreen.width < mouseX + width) {
                 mouseX -= width + 10;
             }
-            if (Minecraft.getInstance().screen.height < mouseY + height) {
+            if (Minecraft.getInstance().currentScreen.height < mouseY + height) {
                 mouseY -= height + 10;
             }
             RenderUtils.setZLevelPre(matrix, 600);
@@ -126,7 +126,7 @@ public class ScrollableScreen extends Screen {
             RenderSystem.enableBlend();
             int i2 = 5;
             for (String s : desc) {
-                drawString(matrix, Minecraft.getInstance().font, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
+                drawString(matrix, Minecraft.getInstance().fontRenderer, s, mouseX + 5, mouseY + i2, Color.WHITE.getRGB());
                 i2 += 10;
             }
             RenderUtils.setZLevelPost(matrix);
@@ -134,8 +134,8 @@ public class ScrollableScreen extends Screen {
         }
     }
 
-    protected static void renderDescriptionBackground(PoseStack matrix, int x, int y, int width, int height) {
-        Gui.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
+    protected static void renderDescriptionBackground(MatrixStack matrix, int x, int y, int width, int height) {
+        AbstractGui.fill(matrix, x, y, x + width, y + height, new Color(26, 26, 26, 250).getRGB());
     }
 
     public boolean isOverlayButtonHovered() {
@@ -156,7 +156,7 @@ public class ScrollableScreen extends Screen {
         }
 
         @Override
-        public void renderEntry(PoseStack matrix) {
+        public void renderEntry(MatrixStack matrix) {
 
             EntryRenderCallback c = new EntryRenderCallback();
             c.entry = this;
@@ -180,7 +180,7 @@ public class ScrollableScreen extends Screen {
         }
 
         public boolean isOverlayButtonHoveredAndOverlapsArea() {
-            return (this.isOverlayButtonHovered && this.isHoveredOrFocused());
+            return (this.isOverlayButtonHovered && this.isHovered());
         }
 
         public void setDescription(List<String> desc) {
@@ -194,7 +194,7 @@ public class ScrollableScreen extends Screen {
         public static class EntryRenderCallback {
 
             public ScrollAreaEntryBase entry;
-            public PoseStack matrix;
+            public MatrixStack matrix;
 
         }
 
@@ -219,7 +219,7 @@ public class ScrollableScreen extends Screen {
                 this.button.setHeight(20);
                 this.button.setX(xCenter - (this.button.getWidth() / 2));
                 this.button.setY(render.entry.y + 2);
-                this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+                this.button.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getTickLength());
             };
             this.setHeight(24);
         }
@@ -233,7 +233,7 @@ public class ScrollableScreen extends Screen {
         public TextFieldEntry(ScrollArea parent, AdvancedTextField textField) {
             super(parent, null);
             this.textField = textField;
-            this.textField.setMaxLength(10000);
+            this.textField.setMaxStringLength(10000);
             this.renderBody = (render) -> {
                 int xCenter = render.entry.x + (render.entry.getWidth() / 2);
                 if (!this.isOverlayButtonHoveredAndOverlapsArea()) {
@@ -245,7 +245,7 @@ public class ScrollableScreen extends Screen {
                 this.textField.setHeight(20);
                 this.textField.setX(xCenter - (this.textField.getWidth() / 2));
                 this.textField.setY(render.entry.y + 2);
-                this.textField.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getDeltaFrameTime());
+                this.textField.render(render.matrix, MouseInput.getMouseX(), MouseInput.getMouseY(), Minecraft.getInstance().getTickLength());
             };
             this.setHeight(24);
         }
@@ -263,17 +263,28 @@ public class ScrollableScreen extends Screen {
             this.bold = bold;
             this.renderBody = (render) -> {
                 if (this.text != null) {
-                    Font font = Minecraft.getInstance().font;
+                    FontRenderer font = Minecraft.getInstance().fontRenderer;
                     int xCenter = render.entry.x + (render.entry.getWidth() / 2);
                     int yCenter = render.entry.y + (render.entry.getHeight() / 2);
                     String s = this.text;
                     if (this.bold) {
                         s = "§l" + this.text;
                     }
-                    drawCenteredString(render.matrix, font, s, xCenter, yCenter - (font.lineHeight / 2), -1);
+                    drawCenteredString(render.matrix, font, s, xCenter, yCenter - (font.FONT_HEIGHT / 2), -1);
                 }
             };
             this.setHeight(18);
+        }
+
+    }
+
+    public static class EmptySpaceEntry extends ScrollAreaEntryBase {
+
+        public EmptySpaceEntry(ScrollArea parent, int height) {
+            super(parent, null);
+            this.renderBody = (render) -> {
+            };
+            this.setHeight(height);
         }
 
     }

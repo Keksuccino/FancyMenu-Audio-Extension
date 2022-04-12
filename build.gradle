@@ -5,20 +5,20 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
-		//classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
-//apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'org.spongepowered.mixin'
 
 version = '1.0.0'
 group = 'de.keksuccino'
 archivesBaseName = 'fmextension_audio'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 compileJava {
     [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 }
@@ -27,14 +27,14 @@ println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getPro
 
 minecraft {
 
-    mappings channel: 'official', version: '1.18.2'
+    mappings channel: 'snapshot', version: '20210309-1.16.5'
 
     runs {
         client {
             workingDirectory project.file('run')
-            //arg "-mixin.config=fancymenu.general.mixin.json"
+            arg "-mixin.config=fmaudio.mixin.json"
             mods {
-                fmextension_video {
+                fmextension_audio {
                     source sourceSets.main
                 }
             }
@@ -56,22 +56,18 @@ repositories {
 
 dependencies {
 
-    minecraft 'net.minecraftforge:forge:1.18.2-40.0.2'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    minecraft 'net.minecraftforge:forge:1.16.5-36.0.1'
 	
-	implementation fileTree('libs') { include '*.jar' }
-
-//    implementation group: 'com.googlecode.soundlibs', name: 'mp3spi', version: '1.9.5.4'
-//    implementation group: 'com.googlecode.soundlibs', name: 'tritonus-share', version: '0.3.7.4'
-//    implementation group: 'com.googlecode.soundlibs', name: 'tritonus-share', version: '0.3.7.4'
-
-    //annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-    //testAnnotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+	annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+	testAnnotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
 
 }
 
-//mixin {
-//    add sourceSets.main, "fancymenu.general.mixin-refmap.json"
-//}
+mixin {
+    add sourceSets.main, "fmaudio.mixin-refmap.json"
+}
 
 jar {
     manifest {
@@ -84,9 +80,9 @@ jar {
             "Implementation-Vendor" :"Keksuccino",
             "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
             "Signing-Fingerprint": project.hasProperty('fingerprint') ? project.property('fingerprint') : 'unsigned',
-			//"TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            //"TweakOrder": 0,
-            //"MixinConfigs" : "fancymenu.general.mixin.json"
+			"TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+            "TweakOrder": 0,
+            "MixinConfigs" : "fmaudio.mixin.json"
         ])
     }
 }

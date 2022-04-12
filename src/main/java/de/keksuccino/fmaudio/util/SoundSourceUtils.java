@@ -1,11 +1,11 @@
 package de.keksuccino.fmaudio.util;
 
-import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.SoundCategory;
 
 public class SoundSourceUtils {
 
-    public static SoundSource getSourceForName(String name) {
-        for (SoundSource s : SoundSource.values()) {
+    public static SoundCategory getSourceForName(String name) {
+        for (SoundCategory s : SoundCategory.values()) {
             if (s.getName().equals(name)) {
                 return s;
             }
