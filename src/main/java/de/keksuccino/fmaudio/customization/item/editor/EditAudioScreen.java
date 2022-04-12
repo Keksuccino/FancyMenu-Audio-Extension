@@ -79,26 +79,29 @@ public class EditAudioScreen extends ScrollableScreen {
             this.scrollArea.removeEntry(e);
         }
 
-        // SOURCE TYPE [LOCAL/WEB] -------------
-        AdvancedButton sourceTypeButton = new AdvancedButton(0, 0, 200, 20, "", true, (press) -> {
-            if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
-                audio.soundType = AudioClip.SoundType.EXTERNAL_WEB;
-            } else if (audio.soundType == AudioClip.SoundType.EXTERNAL_WEB) {
-                audio.soundType = AudioClip.SoundType.EXTERNAL_LOCAL;
-            }
-        }) {
-            @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
-                if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
-                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local"));
-                } else {
-                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_web"));
-                }
-                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
-            }
-        };
-        this.scrollArea.addEntry(new ButtonEntry(this.scrollArea, sourceTypeButton));
-        //--------------------------------------
+        this.scrollArea.addEntry(new EmptySpaceEntry(this.scrollArea, 10));
+
+        //TODO re-implement after stabilizing web sources in Auudio
+//        // SOURCE TYPE [LOCAL/WEB] -------------
+//        AdvancedButton sourceTypeButton = new AdvancedButton(0, 0, 200, 20, "", true, (press) -> {
+//            if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
+//                audio.soundType = AudioClip.SoundType.EXTERNAL_WEB;
+//            } else if (audio.soundType == AudioClip.SoundType.EXTERNAL_WEB) {
+//                audio.soundType = AudioClip.SoundType.EXTERNAL_LOCAL;
+//            }
+//        }) {
+//            @Override
+//            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+//                if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
+//                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local"));
+//                } else {
+//                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_web"));
+//                }
+//                super.render(p_93657_, p_93658_, p_93659_, p_93660_);
+//            }
+//        };
+//        this.scrollArea.addEntry(new ButtonEntry(this.scrollArea, sourceTypeButton));
+//        //--------------------------------------
 
         // SOURCE ------------------------------
         AdvancedButton chooseSourceButton = new AdvancedButton(0, 0, 200, 20, Locals.localize("fancymenu.fmaudio.audio.choosesource"), true, (press) -> {

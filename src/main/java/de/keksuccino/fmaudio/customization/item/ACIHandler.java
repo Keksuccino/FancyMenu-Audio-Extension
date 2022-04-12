@@ -22,9 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AudioCustomizationItemHandler {
+public class ACIHandler {
 
-    private static Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
+    private static final Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
 
     public static List<String> lastPlayingAudioSources = new ArrayList<>();
     public static List<String> newLastPlayingAudioSources = new ArrayList<>();
@@ -35,7 +35,8 @@ public class AudioCustomizationItemHandler {
     protected static Screen lastScreen = null;
 
     public static void init() {
-        MinecraftForge.EVENT_BUS.register(new AudioCustomizationItemHandler());
+        MinecraftForge.EVENT_BUS.register(new ACIHandler());
+        ACIMuteHandler.init();
     }
 
     @SubscribeEvent

@@ -278,4 +278,15 @@ public class ScrollableScreen extends Screen {
 
     }
 
+    public static class EmptySpaceEntry extends ScrollAreaEntryBase {
+
+        public EmptySpaceEntry(ScrollArea parent, int height) {
+            super(parent, null);
+            this.renderBody = (render) -> {
+            };
+            this.setHeight(height);
+        }
+
+    }
+
 }

@@ -139,33 +139,35 @@ public class AudioCustomizationItem extends CustomizationItem {
         }
 
         //Handle once-per-session
-        if (this.oncePerSession && AudioCustomizationItemHandler.startedOncePerSessionItems.containsKey(this.actionId)) {
-            this.alreadyPlayed = AudioCustomizationItemHandler.startedOncePerSessionItems.get(this.actionId).alreadyPlayed;
+        if (this.oncePerSession && ACIHandler.startedOncePerSessionItems.containsKey(this.actionId)) {
+            this.alreadyPlayed = ACIHandler.startedOncePerSessionItems.get(this.actionId).alreadyPlayed;
         }
         if (this.oncePerSession) {
             this.loop = false;
-            AudioCustomizationItemHandler.startedOncePerSessionItems.put(this.actionId, this);
+            ACIHandler.startedOncePerSessionItems.put(this.actionId, this);
         }
 
         //Load alreadyPlayed cache for non-loop items, if it's the same screen
         if (!this.oncePerSession) {
-            if (!this.loop && AudioCustomizationItemHandler.currentNonLoopItems.containsKey(this.actionId)) {
-                this.alreadyPlayed = AudioCustomizationItemHandler.currentNonLoopItems.get(this.actionId).alreadyPlayed;
+            if (!this.loop && ACIHandler.currentNonLoopItems.containsKey(this.actionId)) {
+                this.alreadyPlayed = ACIHandler.currentNonLoopItems.get(this.actionId).alreadyPlayed;
             }
             if (!this.loop) {
-                AudioCustomizationItemHandler.currentNonLoopItems.put(this.actionId, this);
+                ACIHandler.currentNonLoopItems.put(this.actionId, this);
             }
         }
 
-        if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
-            for (MenuAudio m : this.audios) {
-                if (AudioCustomizationItemHandler.lastPlayingAudioSources.contains(m.path)) {
-                    this.startAsynchronous(m, false);
-                    AudioCustomizationItemHandler.lastPlayingAudioSources.remove(m.path);
-                    if (!AudioCustomizationItemHandler.newLastPlayingAudioSources.contains(m.path)) {
-                        AudioCustomizationItemHandler.newLastPlayingAudioSources.add(m.path);
+        if (!ACIMuteHandler.isMuted(this.actionId)) {
+            if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
+                for (MenuAudio m : this.audios) {
+                    if (ACIHandler.lastPlayingAudioSources.contains(m.path)) {
+                        this.startAsynchronous(m, false);
+                        ACIHandler.lastPlayingAudioSources.remove(m.path);
+                        if (!ACIHandler.newLastPlayingAudioSources.contains(m.path)) {
+                            ACIHandler.newLastPlayingAudioSources.add(m.path);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -194,8 +196,14 @@ public class AudioCustomizationItem extends CustomizationItem {
 
     public void tickAudio() {
 
-        //Only tick when not in editor
-        if (!isEditorActive()) {
+        if (ACIMuteHandler.isMuted(this.actionId) && (this.currentAudio != null)) {
+            this.currentAudio.getClip().stop();
+            ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
+            this.currentAudio = null;
+        }
+
+        //Only tick when not in editor and not muted
+        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId)) {
             if (!audios.isEmpty()) {
 
                 MenuAudio nextAudio = null;
@@ -273,7 +281,7 @@ public class AudioCustomizationItem extends CustomizationItem {
         if (!this.isLoadingNextAudio && ((this.currentAudio == null) || !this.currentAudio.isPlaying())) {
 
             if (this.currentAudio != null) {
-                AudioCustomizationItemHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
+                ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
             }
 
             this.isLoadingNextAudio = true;
@@ -319,8 +327,8 @@ public class AudioCustomizationItem extends CustomizationItem {
                         }
                     }
 
-                    if (!AudioCustomizationItemHandler.lastPlayingAudioSources.contains(audio.path)) {
-                        AudioCustomizationItemHandler.lastPlayingAudioSources.add(audio.path);
+                    if (!ACIHandler.lastPlayingAudioSources.contains(audio.path)) {
+                        ACIHandler.lastPlayingAudioSources.add(audio.path);
                     }
                     this.currentAudio = audio;
 

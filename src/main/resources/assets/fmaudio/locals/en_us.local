@@ -30,4 +30,24 @@ fancymenu.fmaudio.audio.volume = Volume
 fancymenu.fmaudio.audio.volume.desc = The volume of this audio.
 
 fancymenu.fmaudio.item = Audio
-fancymenu.fmaudio.item.desc = Add an audio handler to your layout.%n%%n%Can be used to play background sounds.%n%Can hold multiple sounds at once.%n%%n%§cThis element is only visible%n%§cin the editor!%n%§cIt will be invisible%n%§cin the actual menu.
+fancymenu.fmaudio.item.desc = Add an audio handler to your layout.%n%%n%Can be used to play background sounds.%n%Can hold multiple sounds at once.%n%%n%§cThis element is only visible%n%§cin the editor!%n%§cIt will be invisible in the actual menu.
+
+fancymenu.fmaudio.buttonaction.togglemute.action.desc = Toggle mute audio elements by its element ID.
+fancymenu.fmaudio.buttonaction.togglemute.value.desc = Audio Element ID
+
+fancymenu.fmaudio.visibilityrequirement.is_muted = Is Audio Element Muted
+fancymenu.fmaudio.visibilityrequirement.is_muted.desc = Check if an audio element is muted.%n%%n%You can get the element ID%n%of an element by%n%right-clicking it.
+fancymenu.fmaudio.visibilityrequirement.is_muted.value = Audio Element ID
+
+fancymenu.fmaudio.config = Audio Extension Settings
+
+fancymenu.fmaudio.config.categories.world = World
+
+fancymenu.fmaudio.config.stop_world_music_in_menu = Stop Music In MP Menus
+fancymenu.fmaudio.config.stop_world_music_in_menu.desc = Only for Multiplayer worlds!%n%%n%If the world music should%n%stop in menus that normally%n%stop it, even if it's a%n%multiplayer world.
+
+
+
+
+
+
