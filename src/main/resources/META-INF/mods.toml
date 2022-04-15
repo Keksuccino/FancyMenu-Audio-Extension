@@ -27,7 +27,7 @@ side="BOTH"
 modId="auudio"
 mandatory=true
 ordering="AFTER"
-versionRange="[1.0.2,)"
+versionRange="[1.0.3,)"
 side="BOTH"
 
 [[dependencies.fmextension_audio]]
