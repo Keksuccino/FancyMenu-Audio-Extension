@@ -3,7 +3,9 @@
   "package": "de.keksuccino.fmaudio.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "client.MixinMusicManager"
+    "client.MixinMusicManager",
+    "client.MixinScreen",
+    "client.MixinSetupSharingEngine"
   ],
   "injectors": {
     "defaultRequire": 1

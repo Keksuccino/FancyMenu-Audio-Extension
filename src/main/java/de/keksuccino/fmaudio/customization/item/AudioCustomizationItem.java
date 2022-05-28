@@ -42,9 +42,13 @@ public class AudioCustomizationItem extends CustomizationItem {
     public float cachedMasterChannelVolume = -1;
     public float cachedItemChannelVolume = -1;
 
+    protected Screen renderInScreen;
+
     public AudioCustomizationItem(CustomizationItemContainer parentContainer, PropertiesSection item) {
 
         super(parentContainer, item);
+
+        this.renderInScreen = Minecraft.getInstance().currentScreen;
 
         String channelString = item.getEntryValue("channel");
         if (channelString != null) {
@@ -192,6 +196,14 @@ public class AudioCustomizationItem extends CustomizationItem {
 
         }
 
+    }
+
+    @Override
+    public boolean shouldRender() {
+        if (!isEditorActive() && (Minecraft.getInstance().currentScreen != renderInScreen)) {
+            return false;
+        }
+        return super.shouldRender();
     }
 
     public void tickAudio() {
