@@ -2,11 +2,14 @@ package de.keksuccino.fmaudio.customization.item;
 
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
+import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
+import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fmaudio.audio.AudioHandler;
+import de.keksuccino.fmaudio.events.PreScreenInitEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -34,9 +37,37 @@ public class ACIHandler {
 
     protected static Screen lastScreen = null;
 
+    //TODO übernehmen
+    protected static Screen lastScreenCustom = null;
+    public static boolean isNewCustomGui = false;
+    protected static boolean newCustomGuiForTicker = false;
+    //----------------
+
     public static void init() {
         MinecraftForge.EVENT_BUS.register(new ACIHandler());
         ACIMuteHandler.init();
+    }
+
+    //TODO übernehmen
+    @SubscribeEvent
+    public void onPrePreInit(PreScreenInitEvent e) {
+        if (!ButtonCache.isCaching()) {
+            if (lastScreenCustom != null) {
+                if ((e.getScreen() instanceof CustomGuiBase) && (lastScreenCustom instanceof CustomGuiBase)) {
+                    if (!((CustomGuiBase)e.getScreen()).getIdentifier().equals(((CustomGuiBase)lastScreenCustom).getIdentifier())) {
+                        isNewCustomGui = true;
+                    } else {
+                        isNewCustomGui = false;
+                    }
+                } else {
+                    isNewCustomGui = false;
+                }
+            } else {
+                isNewCustomGui = false;
+            }
+            lastScreenCustom = e.getScreen();
+            newCustomGuiForTicker = isNewCustomGui;
+        }
     }
 
     @SubscribeEvent
@@ -55,14 +86,16 @@ public class ACIHandler {
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onButtonsCachedPre(ButtonCachedEvent e) {
-        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
+        //TODO übernehmen (isNewMenu)
+        if (isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
             currentNonLoopItems.clear();
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onButtonsCachedPost(ButtonCachedEvent e) {
-        if (MenuCustomization.isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
+        //TODO übernehmen (isNewMenu)
+        if (isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
             stopLastPlayingAudios();
         }
     }
@@ -93,6 +126,14 @@ public class ACIHandler {
         lastPlayingAudioSources.clear();
         lastPlayingAudioSources.addAll(newLastPlayingAudioSources);
         newLastPlayingAudioSources.clear();
+    }
+
+    //TODO übernehmen
+    public static boolean isNewMenu() {
+        if (MenuCustomization.isNewMenu() || isNewCustomGui) {
+            return true;
+        }
+        return false;
     }
 
 }
