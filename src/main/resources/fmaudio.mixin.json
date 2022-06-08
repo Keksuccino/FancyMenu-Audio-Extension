@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "de.keksuccino.fmaudio.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "client.MixinMusicManager",
+    "client.MixinScreen",
+    "client.MixinSetupSharingEngine"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "refmap": "fmaudio.mixin-refmap.json",
+  "plugin": "de.keksuccino.fmaudio.mixin.FmAudioMixinPlugin",
+  "minVersion": "0.8"
+}

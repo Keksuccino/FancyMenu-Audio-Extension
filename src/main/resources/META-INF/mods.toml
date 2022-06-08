@@ -1,0 +1,45 @@
+modLoader="javafml"
+loaderVersion="[41,)"
+license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
+[[mods]]
+modId="fmextension_audio"
+version="1.0.1"
+displayName="FancyMenu Audio Extension"
+authors="Keksuccino"
+description='''
+~ vibin' ~
+
+COPYRIGHT:
+
+> FancyMenu Audio Extension © Copyright 2022 Keksuccino.
+  FancyMenu Audio Extension is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE).
+  See its GitHub repository for more information about this license.
+'''
+
+[[dependencies.fmextension_audio]]
+modId="fancymenu"
+mandatory=true
+ordering="AFTER"
+versionRange="[2.6.4,)"
+side="BOTH"
+
+[[dependencies.fmextension_audio]]
+modId="auudio"
+mandatory=true
+ordering="AFTER"
+versionRange="[1.0.3,)"
+side="BOTH"
+
+[[dependencies.fmextension_audio]]
+modId="forge"
+mandatory=true
+versionRange="[41.0.2,)"
+ordering="NONE"
+side="CLIENT"
+
+[[dependencies.fmextension_audio]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.19,)"
+ordering="NONE"
+side="CLIENT"
