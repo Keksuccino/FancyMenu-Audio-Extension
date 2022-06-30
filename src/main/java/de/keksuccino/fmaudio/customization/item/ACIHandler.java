@@ -1,6 +1,7 @@
 package de.keksuccino.fmaudio.customization.item;
 
 import de.keksuccino.auudio.audio.AudioClip;
+import de.keksuccino.fancymenu.events.GuiInitCompletedEvent;
 import de.keksuccino.fancymenu.events.SoftMenuReloadEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
@@ -8,6 +9,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fmaudio.FmAudio;
 import de.keksuccino.fmaudio.audio.AudioHandler;
 import de.keksuccino.fmaudio.events.PreScreenInitEvent;
 import net.minecraft.client.Minecraft;
@@ -27,28 +29,25 @@ import java.util.Map;
 
 public class ACIHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
+    private static final Logger LOGGER = LogManager.getLogger("fmaudio/ACIHandler");
 
-    public static List<String> lastPlayingAudioSources = new ArrayList<>();
-    public static List<String> newLastPlayingAudioSources = new ArrayList<>();
-
-    public static Map<String, AudioCustomizationItem> currentNonLoopItems = new HashMap<>();
-    public static Map<String, AudioCustomizationItem> startedOncePerSessionItems = new HashMap<>();
+    public static volatile List<String> currentLayoutAudios = new ArrayList<>();
+    public static volatile List<String> lastPlayingAudioSources = new ArrayList<>();
+    public static volatile List<String> newLastPlayingAudioSources = new ArrayList<>();
 
     protected static Screen lastScreen = null;
 
-    //TODO übernehmen
     protected static Screen lastScreenCustom = null;
     public static boolean isNewCustomGui = false;
     protected static boolean newCustomGuiForTicker = false;
-    //----------------
+
+    public static Screen lastScreenGlobal = null;
 
     public static void init() {
         MinecraftForge.EVENT_BUS.register(new ACIHandler());
         ACIMuteHandler.init();
     }
 
-    //TODO übernehmen
     @SubscribeEvent
     public void onPrePreInit(PreScreenInitEvent e) {
         if (!ButtonCache.isCaching()) {
@@ -67,36 +66,44 @@ public class ACIHandler {
             }
             lastScreenCustom = e.getScreen();
             newCustomGuiForTicker = isNewCustomGui;
+            currentLayoutAudios.clear();
         }
     }
 
     @SubscribeEvent
     public void onReload(MenuReloadedEvent e) {
-        currentNonLoopItems.clear();
-        startedOncePerSessionItems.clear();
+        AudioCustomizationItem.cachedItems.clear();
         AudioHandler.stopAll();
     }
 
     @SubscribeEvent
     public void onSoftReload(SoftMenuReloadEvent e) {
-        currentNonLoopItems.clear();
-        startedOncePerSessionItems.clear();
+        AudioCustomizationItem.cachedItems.clear();
         AudioHandler.stopAll();
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public void onButtonsCachedPre(ButtonCachedEvent e) {
-        //TODO übernehmen (isNewMenu)
         if (isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
-            currentNonLoopItems.clear();
+            for (AudioCustomizationItem i : AudioCustomizationItem.cachedItems.values()) {
+                if (i.isLoadingNextAudio) {
+                    i.tryKillNextAudioThread = true;
+                }
+            }
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOW)
     public void onButtonsCachedPost(ButtonCachedEvent e) {
-        //TODO übernehmen (isNewMenu)
-        if (isNewMenu() && MenuCustomization.isValidScreen(e.getScreen())) {
+        if (MenuCustomization.isValidScreen(e.getScreen())) {
             stopLastPlayingAudios();
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void onInitCompleted(GuiInitCompletedEvent e) {
+        if (!ButtonCache.isCaching() && MenuCustomization.isValidScreen(e.getScreen())) {
+            lastScreenGlobal = Minecraft.getInstance().screen;
         }
     }
 
@@ -128,12 +135,19 @@ public class ACIHandler {
         newLastPlayingAudioSources.clear();
     }
 
-    //TODO übernehmen
     public static boolean isNewMenu() {
         if (MenuCustomization.isNewMenu() || isNewCustomGui) {
             return true;
         }
         return false;
+    }
+
+    public static boolean playingAllowed() {
+        boolean onlyOutOfWorld = FmAudio.config.getOrDefault("only_play_out_of_world", false);
+        if (onlyOutOfWorld && (Minecraft.getInstance().level != null)) {
+            return false;
+        }
+        return true;
     }
 
 }

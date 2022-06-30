@@ -3,7 +3,7 @@ loaderVersion="[38,)"
 license="DSMSL (DON'T SNATCH MA STUFF LICENSE)"
 [[mods]]
 modId="fmextension_audio"
-version="1.0.1"
+version="1.1.1"
 displayName="FancyMenu Audio Extension"
 authors="Keksuccino"
 description='''

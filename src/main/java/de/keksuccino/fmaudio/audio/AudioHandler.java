@@ -67,6 +67,15 @@ public class AudioHandler {
         return l;
     }
 
+    public static boolean containsPausedOrPlayingAudio() {
+        for (AudioClip c : audios.values()) {
+            if (c.paused() || c.playing()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void pauseAll() {
         for (AudioClip c : audios.values()) {
             if (c.playing()) {
