@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
 import de.keksuccino.fancymenu.menu.fancy.guicreator.CustomGuiBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
+import de.keksuccino.fmaudio.FmAudio;
 import de.keksuccino.fmaudio.audio.AudioHandler;
 import de.keksuccino.fmaudio.events.PreScreenInitEvent;
 import de.keksuccino.konkrete.Konkrete;
@@ -97,14 +98,12 @@ public class ACIHandler {
     }
 
     @SubscribeEvent
-    public void onTick(ClientTickEvent e) {
-
+    public void onTick(ClientTickEvent.Pre e) {
         Screen current = Minecraft.getInstance().screen;
         if ((current == null) && (lastScreen != null)) {
             AudioHandler.stopAll();
         }
         lastScreen = current;
-
     }
 
     public static void stopLastPlayingAudios() {
@@ -124,6 +123,14 @@ public class ACIHandler {
             return true;
         }
         return false;
+    }
+
+    public static boolean playingAllowed() {
+        boolean onlyOutOfWorld = FmAudio.config.getOrDefault("only_play_out_of_world", false);
+        if (onlyOutOfWorld && (Minecraft.getInstance().level != null)) {
+            return false;
+        }
+        return true;
     }
 
 }

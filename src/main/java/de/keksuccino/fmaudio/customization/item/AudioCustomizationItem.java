@@ -163,7 +163,7 @@ public class AudioCustomizationItem extends CustomizationItem {
 
         //TODO übernehmen
         if (ACIHandler.initialResourceReloadFinished) {
-            if (!ACIMuteHandler.isMuted(this.actionId)) {
+            if (!ACIMuteHandler.isMuted(this.actionId) && ACIHandler.playingAllowed()) {
                 if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
                     for (MenuAudio m : this.audios) {
                         if (ACIHandler.lastPlayingAudioSources.contains(m.path)) {
@@ -214,14 +214,14 @@ public class AudioCustomizationItem extends CustomizationItem {
 
     public void tickAudio() {
 
-        if (ACIMuteHandler.isMuted(this.actionId) && (this.currentAudio != null)) {
+        if ((ACIMuteHandler.isMuted(this.actionId) || !ACIHandler.playingAllowed()) && (this.currentAudio != null)) {
             this.currentAudio.getClip().stop();
             ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
             this.currentAudio = null;
         }
 
         //Only tick when not in editor and not muted
-        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId)) {
+        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId) && ACIHandler.playingAllowed()) {
             if (!audios.isEmpty()) {
 
                 MenuAudio nextAudio = null;
