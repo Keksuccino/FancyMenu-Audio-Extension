@@ -34,15 +34,20 @@ public class AudioCustomizationItem extends CustomizationItem {
     public SoundSource channel = SoundSource.MASTER;
     public boolean loop = true;
     public boolean oncePerSession = false;
+    public boolean oncePerSessionCanStart = true;
 
     public volatile boolean isLoadingNextAudio = false;
     public volatile MenuAudio currentAudio = null;
     public volatile List<String> alreadyPlayed = new ArrayList<>();
+    public volatile MenuAudio audioToContinue = null;
 
     public float cachedMasterChannelVolume = -1;
     public float cachedItemChannelVolume = -1;
-
     protected Screen renderInScreen;
+
+    protected volatile boolean tryKillNextAudioThread = false;
+
+    public static volatile Map<String, AudioCustomizationItem> cachedItems = new HashMap<>();
 
     public AudioCustomizationItem(CustomizationItemContainer parentContainer, PropertiesSection item) {
 
@@ -50,133 +55,170 @@ public class AudioCustomizationItem extends CustomizationItem {
 
         this.renderInScreen = Minecraft.getInstance().screen;
 
-        String channelString = item.getEntryValue("channel");
-        if (channelString != null) {
-            try {
-                SoundSource soundSource = SoundSourceUtils.getSourceForName(channelString);
-                if (soundSource != null) {
-                    this.channel = soundSource;
-                } else {
-                    LOGGER.warn("WARNING: Channel was NULL after parsing! Channel set to MASTER! (" + channelString + ")");
-                }
-            } catch (Exception e) {
-                LOGGER.warn("WARNING: Unable to parse channel! Channel set to MASTER! (" + channelString + ")");
-                e.printStackTrace();
+        boolean isNewScreen = (this.renderInScreen != ACIHandler.lastScreenGlobal);
+
+        //It's important to clear the cache at the start AND at the end!
+        if (isEditorActive()) {
+            cachedItems.clear();
+        }
+
+        if (cachedItems.containsKey(this.actionId)) {
+
+            AudioCustomizationItem old = cachedItems.get(this.actionId);
+
+            this.audios = old.audios;
+            this.channel = old.channel;
+            this.loop = old.loop;
+            this.oncePerSession = old.oncePerSession;
+//            this.isLoadingNextAudio = old.isLoadingNextAudio;
+            this.currentAudio = old.currentAudio;
+            this.alreadyPlayed = old.alreadyPlayed;
+            this.audioToContinue = old.audioToContinue;
+            this.cachedMasterChannelVolume = old.cachedMasterChannelVolume;
+            this.cachedItemChannelVolume = old.cachedItemChannelVolume;
+
+            //Handle once-per-session
+            if ((old.oncePerSession && isNewScreen) || !old.oncePerSessionCanStart) {
+                this.oncePerSessionCanStart = false;
             }
+
+            //Clear alreadyPlayed cache if it's a new screen
+            if (!this.oncePerSession && !this.loop && isNewScreen) {
+                this.alreadyPlayed = new ArrayList<>();
+            }
+
         } else {
-            LOGGER.warn("WARNING: Channel is NULL! Channel set to MASTER!");
-        }
 
-        String loopString = item.getEntryValue("loop");
-        if ((loopString != null) && loopString.equalsIgnoreCase("false")) {
-            this.loop = false;
-        }
+            String channelString = item.getEntryValue("channel");
+            if (channelString != null) {
+                try {
+                    SoundSource soundSource = SoundSourceUtils.getSourceForName(channelString);
+                    if (soundSource != null) {
+                        this.channel = soundSource;
+                    } else {
+                        LOGGER.warn("WARNING: Channel was NULL after parsing! Channel set to MASTER! (" + channelString + ")");
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("WARNING: Unable to parse channel! Channel set to MASTER! (" + channelString + ")");
+                    e.printStackTrace();
+                }
+            } else {
+                LOGGER.warn("WARNING: Channel is NULL! Channel set to MASTER!");
+            }
 
-        String oncePerSessionString = item.getEntryValue("once_per_session");
-        if ((oncePerSessionString != null) && oncePerSessionString.equalsIgnoreCase("true")) {
-            this.oncePerSession = true;
-        }
+            String loopString = item.getEntryValue("loop");
+            if ((loopString != null) && loopString.equalsIgnoreCase("false")) {
+                this.loop = false;
+            }
 
-        for (Map.Entry<String, String> m : item.getEntries().entrySet()) {
-            if (m.getKey().startsWith("audio_source:")) {
-                String audioIdentifier = m.getKey().split(":", 2)[1];
-                if (m.getValue().contains(";")) {
-                    String[] audioProps = m.getValue().split("[;]", -1);
-                    if (audioProps.length >= 4) {
+            String oncePerSessionString = item.getEntryValue("once_per_session");
+            if ((oncePerSessionString != null) && oncePerSessionString.equalsIgnoreCase("true")) {
+                this.oncePerSession = true;
+            }
 
-                        String sourceString = audioProps[0];
-                        if (sourceString == null) {
-                            LOGGER.error("ERROR: Source is NULL! (" + m.getValue() + ")");
-                            continue;
-                        }
-                        String typeString = audioProps[1];
-                        if (typeString == null) {
-                            LOGGER.error("ERROR: Type is NULL! (" + m.getValue() + ")");
-                            continue;
-                        }
-                        AudioClip.SoundType type;
-                        try {
-                            type = AudioClip.SoundType.valueOf(typeString);
-                            if (type == null) {
-                                LOGGER.error("ERROR: Sound type was NULL after parsing! (" + m.getValue() + ")");
+            for (Map.Entry<String, String> m : item.getEntries().entrySet()) {
+                if (m.getKey().startsWith("audio_source:")) {
+                    String audioIdentifier = m.getKey().split(":", 2)[1];
+                    if (m.getValue().contains(";")) {
+                        String[] audioProps = m.getValue().split("[;]", -1);
+                        if (audioProps.length >= 4) {
+
+                            String sourceString = audioProps[0];
+                            if (sourceString == null) {
+                                LOGGER.error("ERROR: Source is NULL! (" + m.getValue() + ")");
                                 continue;
                             }
-                        } catch (Exception e) {
-                            LOGGER.error("ERROR: Unable to parse sound type! (" + m.getValue() + ")");
-                            e.printStackTrace();
-                            continue;
-                        }
-                        String volString = audioProps[2];
-                        int vol = 100;
-                        if (MathUtils.isInteger(volString)) {
-                            vol = Integer.parseInt(volString);
-                        } else {
-                            LOGGER.warn("WARNING: Unable to parse volume! Volume set to 100! (" + m.getValue() + ")");
-                        }
-                        String indexString = audioProps[3];
-                        int index = 0;
-                        if ((indexString != null) && MathUtils.isInteger(indexString)) {
-                            index = Integer.parseInt(indexString);
-                            if (index < 0) {
-                                index = 0;
-                                LOGGER.warn("WARNING: Tried to use negative index! Index corrected to 0! (" + m.getValue() + ")");
+                            String typeString = audioProps[1];
+                            if (typeString == null) {
+                                LOGGER.error("ERROR: Type is NULL! (" + m.getValue() + ")");
+                                continue;
                             }
+                            AudioClip.SoundType type;
+                            try {
+                                type = AudioClip.SoundType.valueOf(typeString);
+                                if (type == null) {
+                                    LOGGER.error("ERROR: Sound type was NULL after parsing! (" + m.getValue() + ")");
+                                    continue;
+                                }
+                            } catch (Exception e) {
+                                LOGGER.error("ERROR: Unable to parse sound type! (" + m.getValue() + ")");
+                                e.printStackTrace();
+                                continue;
+                            }
+                            String volString = audioProps[2];
+                            int vol = 100;
+                            if (MathUtils.isInteger(volString)) {
+                                vol = Integer.parseInt(volString);
+                            } else {
+                                LOGGER.warn("WARNING: Unable to parse volume! Volume set to 100! (" + m.getValue() + ")");
+                            }
+                            String indexString = audioProps[3];
+                            int index = 0;
+                            if ((indexString != null) && MathUtils.isInteger(indexString)) {
+                                index = Integer.parseInt(indexString);
+                                if (index < 0) {
+                                    index = 0;
+                                    LOGGER.warn("WARNING: Tried to use negative index! Index corrected to 0! (" + m.getValue() + ")");
+                                }
+                            } else {
+                                LOGGER.warn("WARNING: Unable to parse index! Index set to 0! (" + m.getValue() + ")");
+                            }
+
+                            MenuAudio ma = new MenuAudio(sourceString, type, this);
+                            ma.volume = vol;
+                            if ((audioIdentifier != null) && (audioIdentifier.length() >= 7)) {
+                                ma.audioIdentifier = audioIdentifier;
+                            }
+                            ma.index = index;
+                            if (!ACIHandler.currentLayoutAudios.contains(ma.path)) {
+                                this.audios.add(ma);
+                                ACIHandler.currentLayoutAudios.add(ma.path);
+                            }
+
                         } else {
-                            LOGGER.warn("WARNING: Unable to parse index! Index set to 0! (" + m.getValue() + ")");
+                            LOGGER.error("ERROR: Unable to parse audio source properties string! (" + m.getValue() + ")");
                         }
-
-                        MenuAudio ma = new MenuAudio(sourceString, type, this);
-                        ma.volume = vol;
-                        if ((audioIdentifier != null) && (audioIdentifier.length() >= 7)) {
-                            ma.audioIdentifier = audioIdentifier;
-                        }
-                        ma.index = index;
-                        this.audios.add(ma);
-
                     } else {
-                        LOGGER.error("ERROR: Unable to parse audio source properties string! (" + m.getValue() + ")");
+                        LOGGER.error("ERROR: Invalid audio source properties string! (" + m.getValue() + ")");
                     }
-                } else {
-                    LOGGER.error("ERROR: Invalid audio source properties string! (" + m.getValue() + ")");
                 }
             }
+
         }
 
-        //Handle once-per-session
-        if (this.oncePerSession && ACIHandler.startedOncePerSessionItems.containsKey(this.actionId)) {
-            this.alreadyPlayed = ACIHandler.startedOncePerSessionItems.get(this.actionId).alreadyPlayed;
-        }
         if (this.oncePerSession) {
             this.loop = false;
-            ACIHandler.startedOncePerSessionItems.put(this.actionId, this);
         }
 
-        //Load alreadyPlayed cache for non-loop items, if it's the same screen
-        if (!this.oncePerSession) {
-            if (!this.loop && ACIHandler.currentNonLoopItems.containsKey(this.actionId)) {
-                this.alreadyPlayed = ACIHandler.currentNonLoopItems.get(this.actionId).alreadyPlayed;
-            }
-            if (!this.loop) {
-                ACIHandler.currentNonLoopItems.put(this.actionId, this);
-            }
-        }
-
-        //TODO übernehmen
         if (ACIHandler.initialResourceReloadFinished) {
-            if (!ACIMuteHandler.isMuted(this.actionId)) {
-                if (!isEditorActive() && (this.loop || (this.alreadyPlayed.size() < this.audios.size()))) {
-                    for (MenuAudio m : this.audios) {
-                        if (ACIHandler.lastPlayingAudioSources.contains(m.path)) {
-                            this.startAsynchronous(m, false);
-                            ACIHandler.lastPlayingAudioSources.remove(m.path);
-                            if (!ACIHandler.newLastPlayingAudioSources.contains(m.path)) {
-                                ACIHandler.newLastPlayingAudioSources.add(m.path);
+            if (this.oncePerSessionCanStart) {
+                if (!ACIMuteHandler.isMuted(this.actionId) && ACIHandler.playingAllowed()) {
+                    if (!isEditorActive() && (this.loop || ((this.alreadyPlayed.size() < this.audios.size()) || (!this.loop && (this.currentAudio != null) && this.currentAudio.isPlaying())))) {
+
+                        for (MenuAudio m : this.audios) {
+                            if (ACIHandler.lastPlayingAudioSources.contains(m.path)) {
+                                ACIHandler.lastPlayingAudioSources.remove(m.path);
+                                if (!ACIHandler.newLastPlayingAudioSources.contains(m.path)) {
+                                    ACIHandler.newLastPlayingAudioSources.add(m.path);
+                                }
+                                if ((this.currentAudio == null) || !this.currentAudio.isPlaying()) {
+                                    this.audioToContinue = m;
+                                    this.startAsynchronous(m, false);
+                                }
+                                break;
                             }
-                            break;
                         }
+
                     }
                 }
             }
+        }
+
+        cachedItems.put(this.actionId, this);
+
+        //It's important to clear the cache at the start AND at the end!
+        if (isEditorActive()) {
+            cachedItems.clear();
         }
 
     }
@@ -195,7 +237,6 @@ public class AudioCustomizationItem extends CustomizationItem {
 
             }
 
-            //TODO übernehmen
             if (ACIHandler.initialResourceReloadFinished) {
                 this.tickAudio();
             }
@@ -214,14 +255,18 @@ public class AudioCustomizationItem extends CustomizationItem {
 
     public void tickAudio() {
 
-        if (ACIMuteHandler.isMuted(this.actionId) && (this.currentAudio != null)) {
+        if ((this.currentAudio != null) && this.currentAudio.isPlaying() && (this.alreadyPlayed.size() == 0) && !this.loop) {
+            this.alreadyPlayed.add(this.currentAudio.audioIdentifier);
+        }
+
+        if ((ACIMuteHandler.isMuted(this.actionId) || !ACIHandler.playingAllowed()) && (this.currentAudio != null)) {
             this.currentAudio.getClip().stop();
             ACIHandler.lastPlayingAudioSources.remove(this.currentAudio.path);
             this.currentAudio = null;
         }
 
         //Only tick when not in editor and not muted
-        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId)) {
+        if (!isEditorActive() && !ACIMuteHandler.isMuted(this.actionId) && ACIHandler.playingAllowed() && this.oncePerSessionCanStart) {
             if (!audios.isEmpty()) {
 
                 MenuAudio nextAudio = null;
@@ -328,6 +373,12 @@ public class AudioCustomizationItem extends CustomizationItem {
                 AudioClip clip = audio.getClip();
                 if (clip != null) {
 
+                    if (tryKillNextAudioThread) {
+                        isLoadingNextAudio = false;
+                        LOGGER.info("Force-killed audio loading thread, because element unloaded while thread was running! (" + audio.path + ")");
+                        return;
+                    }
+
                     audio.setVolume(audio.volume);
                     clip.setLooping(false);
                     if (restart) {
@@ -337,6 +388,12 @@ public class AudioCustomizationItem extends CustomizationItem {
 
                     long startTime = System.currentTimeMillis();
                     while (!clip.playing()) {
+                        if (tryKillNextAudioThread) {
+                            clip.stop();
+                            isLoadingNextAudio = false;
+                            LOGGER.info("Force-killed audio loading thread, because element unloaded while thread was running! (" + audio.path + ")");
+                            return;
+                        }
                         long now = System.currentTimeMillis();
                         if ((startTime + 10000) <= now) {
                             LOGGER.error("ERROR: Unable to start next audio! Timeout while starting clip! (" + audio.path + ")");
@@ -346,7 +403,11 @@ public class AudioCustomizationItem extends CustomizationItem {
                     }
 
                     if (!ACIHandler.lastPlayingAudioSources.contains(audio.path)) {
-                        ACIHandler.lastPlayingAudioSources.add(audio.path);
+                        if (audio != audioToContinue) {
+                            ACIHandler.lastPlayingAudioSources.add(audio.path);
+                        } else {
+                            audioToContinue = null;
+                        }
                     }
                     this.currentAudio = audio;
 
