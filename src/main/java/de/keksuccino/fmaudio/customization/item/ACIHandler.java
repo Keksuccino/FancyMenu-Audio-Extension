@@ -14,6 +14,7 @@ import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
+import de.keksuccino.konkrete.events.client.GuiInitCompletedEvent;
 import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -29,11 +30,9 @@ public class ACIHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
 
-    public static List<String> lastPlayingAudioSources = new ArrayList<>();
-    public static List<String> newLastPlayingAudioSources = new ArrayList<>();
-
-    public static Map<String, AudioCustomizationItem> currentNonLoopItems = new HashMap<>();
-    public static Map<String, AudioCustomizationItem> startedOncePerSessionItems = new HashMap<>();
+    public static volatile List<String> currentLayoutAudios = new ArrayList<>();
+    public static volatile List<String> lastPlayingAudioSources = new ArrayList<>();
+    public static volatile List<String> newLastPlayingAudioSources = new ArrayList<>();
 
     protected static Screen lastScreen = null;
 
@@ -42,6 +41,8 @@ public class ACIHandler {
     protected static Screen lastScreenCustom = null;
     public static boolean isNewCustomGui = false;
     protected static boolean newCustomGuiForTicker = false;
+
+    public static Screen lastScreenGlobal = null;
 
     public static void init() {
         Konkrete.getEventHandler().registerEventsFrom(new ACIHandler());
@@ -66,27 +67,38 @@ public class ACIHandler {
             }
             lastScreenCustom = e.getScreen();
             newCustomGuiForTicker = isNewCustomGui;
+            currentLayoutAudios.clear();
         }
     }
 
     @SubscribeEvent
     public void onReload(MenuReloadedEvent e) {
-        currentNonLoopItems.clear();
-        startedOncePerSessionItems.clear();
+        AudioCustomizationItem.cachedItems.clear();
         AudioHandler.stopAll();
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onButtonsCachedPre(ButtonCachedEvent e) {
         if (isNewMenu() && MenuCustomization.isValidScreen(e.getGui())) {
-            currentNonLoopItems.clear();
+            for (AudioCustomizationItem i : AudioCustomizationItem.cachedItems.values()) {
+                if (i.isLoadingNextAudio) {
+                    i.tryKillNextAudioThread = true;
+                }
+            }
         }
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onButtonsCachedPost(ButtonCachedEvent e) {
-        if (isNewMenu() && MenuCustomization.isValidScreen(e.getGui())) {
+        if (MenuCustomization.isValidScreen(e.getGui())) {
             stopLastPlayingAudios();
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void onInitCompleted(GuiInitCompletedEvent e) {
+        if (!ButtonCache.isCaching() && MenuCustomization.isValidScreen(e.getGui())) {
+            lastScreenGlobal = Minecraft.getInstance().screen;
         }
     }
 
