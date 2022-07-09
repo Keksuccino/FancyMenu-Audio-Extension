@@ -121,7 +121,7 @@ public class ACIHandler {
     }
 
     @SubscribeEvent
-    public void onScreenInitPre(ScreenEvent.InitScreenEvent.Pre e) {
+    public void onScreenInitPre(ScreenEvent.Init.Pre e) {
         if (e.getScreen() instanceof LayoutEditorScreen) {
             AudioHandler.stopAll();
         }

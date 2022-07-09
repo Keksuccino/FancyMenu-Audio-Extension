@@ -37,7 +37,7 @@ public class EventHandler {
     }
 
     @SubscribeEvent
-    public void onDrawScreenPost(ScreenEvent.DrawScreenEvent.Post e) {
+    public void onDrawScreenPost(ScreenEvent.Render.Post e) {
 
         if (e.getScreen() instanceof FMConfigScreen) {
 
