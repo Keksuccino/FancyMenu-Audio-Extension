@@ -5,7 +5,6 @@ import de.keksuccino.fmaudio.FmAudio;
 import de.keksuccino.konkrete.properties.PropertiesSection;
 import de.keksuccino.konkrete.properties.PropertiesSerializer;
 import de.keksuccino.konkrete.properties.PropertiesSet;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;

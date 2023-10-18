@@ -1,6 +1,6 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.content.ChooseFilePopup;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
@@ -91,7 +91,7 @@ public class EditAudioScreen extends ScrollableScreen {
 //            }
 //        }) {
 //            @Override
-//            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+//            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
 //                if (audio.soundType == AudioClip.SoundType.EXTERNAL_LOCAL) {
 //                    this.setMessage(Locals.localize("fancymenu.fmaudio.audio.sourcetype.external_local"));
 //                } else {
@@ -147,7 +147,7 @@ public class EditAudioScreen extends ScrollableScreen {
         this.scrollArea.addEntry(indexLabelEntry);
         AdvancedTextField indexTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
                 if (MathUtils.isInteger(this.getValue().replace(" ", ""))) {
                     audio.index = Integer.parseInt(this.getValue().replace(" ", ""));
@@ -167,7 +167,7 @@ public class EditAudioScreen extends ScrollableScreen {
         this.scrollArea.addEntry(volumeLabelEntry);
         AdvancedTextField volumeTextField = new AdvancedTextField(Minecraft.getInstance().font, 0, 0, 200, 20, true, CharacterFilter.getIntegerCharacterFiler()) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
                 if (MathUtils.isInteger(this.getValue().replace(" ", ""))) {
                     audio.volume = Integer.parseInt(this.getValue().replace(" ", ""));
@@ -200,11 +200,11 @@ public class EditAudioScreen extends ScrollableScreen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         int xCenter = this.width / 2;
 
-        super.render(matrix, mouseX, mouseY, partialTicks);
+        super.render(graphics, mouseX, mouseY, partialTicks);
 
         //Save Button
         if (!this.isNewAudio) {
@@ -213,14 +213,18 @@ public class EditAudioScreen extends ScrollableScreen {
             this.doneButton.setX(xCenter + 5);
         }
         this.doneButton.setY(this.height - 35);
-        this.doneButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.doneButton.render(graphics, mouseX, mouseY, partialTicks);
 
         if (this.isNewAudio) {
             this.cancelButton.setX(xCenter - this.cancelButton.getWidth() - 5);
             this.cancelButton.setY(this.height - 35);
-            this.cancelButton.render(matrix, mouseX, mouseY, partialTicks);
+            this.cancelButton.render(graphics, mouseX, mouseY, partialTicks);
         }
 
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int i, int j, float f) {
     }
 
     @Override

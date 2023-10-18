@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.popup.FMYesNoPopup;
@@ -88,33 +88,37 @@ public class ManageAudiosScreen extends Screen {
     }
 
     @Override
-    public void render(PoseStack matrix, int mouseX, int mouseY, float partialTicks) {
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 
         int xCenter = this.width / 2;
         int yCenter = this.height / 2;
 
         RenderSystem.enableBlend();
 
-        fill(matrix, 0, 0, this.width, this.height, BACKGROUND_COLOR.getRGB());
+        graphics.fill(0, 0, this.width, this.height, BACKGROUND_COLOR.getRGB());
 
-        drawCenteredString(matrix, font, Locals.localize("fancymenu.fmaudio.audio.manage"), this.width / 2, 20, -1);
+        graphics.drawCenteredString(font, Locals.localize("fancymenu.fmaudio.audio.manage"), this.width / 2, 20, -1);
 
         this.addAudioButton.setX(xCenter - (this.addAudioButton.getWidth() / 2));
         this.addAudioButton.setY(yCenter - 35);
-        this.addAudioButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.addAudioButton.render(graphics, mouseX, mouseY, partialTicks);
 
         this.removeAudioButton.setX(xCenter - (this.removeAudioButton.getWidth() / 2));
         this.removeAudioButton.setY(yCenter - 10);
-        this.removeAudioButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.removeAudioButton.render(graphics, mouseX, mouseY, partialTicks);
 
         this.editAudioButton.setX(xCenter - (this.editAudioButton.getWidth() / 2));
         this.editAudioButton.setY(yCenter + 15);
-        this.editAudioButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.editAudioButton.render(graphics, mouseX, mouseY, partialTicks);
 
         this.backButton.setX(xCenter - (this.backButton.getWidth() / 2));
         this.backButton.setY(this.height - 35);
-        this.backButton.render(matrix, mouseX, mouseY, partialTicks);
+        this.backButton.render(graphics, mouseX, mouseY, partialTicks);
 
+    }
+
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int i, int j, float f) {
     }
 
     @Override

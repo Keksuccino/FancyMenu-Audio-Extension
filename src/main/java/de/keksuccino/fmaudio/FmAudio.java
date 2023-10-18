@@ -1,7 +1,6 @@
 package de.keksuccino.fmaudio;
 
 import java.io.File;
-
 import de.keksuccino.auudio.Auudio;
 import de.keksuccino.fancymenu.api.buttonaction.ButtonActionRegistry;
 import de.keksuccino.fancymenu.api.item.CustomizationItemRegistry;
@@ -22,11 +21,12 @@ import de.keksuccino.konkrete.config.exceptions.InvalidValueException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+@SuppressWarnings("all")
 public class FmAudio implements ModInitializer {
 
-	public static final String VERSION = "1.1.1";
+	public static final String VERSION = "1.1.2";
 
-	private static final Logger LOGGER = LogManager.getLogger("fmaudio/FmAudio");
+	private static final Logger LOGGER = LogManager.getLogger();
 
 	public static final File MOD_DIR = new File("config/fancymenu/extensions/fmaudio");
 	public static final File INSTANCE_DATA_DIR = new File("fancymenu_instance_data/extensions/fmaudio");
@@ -53,7 +53,6 @@ public class FmAudio implements ModInitializer {
 
 				ACIHandler.init();
 
-				//TODO übernehmen
 				Auudio.registerPostReloadTask(() -> {
 					ACIHandler.initialResourceReloadFinished = true;
 					MenuCustomization.reload();

@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "id": "fmextension_audio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "name": "FancyMenu Audio Extension",
-  "description": "FancyMenu Audio Extension © Copyright 2022 Keksuccino. FancyMenu Audio Extension is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See its GitHub repo for more information about this license.",
+  "description": "FancyMenu Audio Extension © Copyright 2022-2023 Keksuccino. FancyMenu Audio Extension is licensed under DSMSL (DON'T SNATCH MA STUFF LICENSE). See its GitHub repo for more information about this license.",
   "environment": "client",
   "authors": [
     "Keksuccino"
@@ -24,9 +24,9 @@
   "depends": {
     "fabricloader": ">=0.14.6",
     "fabric": "*",
-    "fancymenu": ">=2.6.4",
+    "fancymenu": ">=2.14.10",
     "auudio": ">=1.0.3",
-    "minecraft": "1.19.x",
+    "minecraft": ">=1.20.2",
     "java": ">=17"
   }
 }
