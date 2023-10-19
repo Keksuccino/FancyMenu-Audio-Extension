@@ -1,7 +1,7 @@
 package de.keksuccino.fmaudio.customization.item;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.auudio.audio.AudioClip;
 import de.keksuccino.fancymenu.api.Nonnull;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
@@ -12,7 +12,6 @@ import de.keksuccino.fmaudio.util.SoundSourceUtils;
 import de.keksuccino.fmaudio.util.UrlUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.konkrete.properties.PropertiesSection;
-import de.keksuccino.konkrete.rendering.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.resources.ResourceLocation;
@@ -20,10 +19,10 @@ import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.util.*;
 
+@SuppressWarnings("all")
 public class AudioCustomizationItem extends CustomizationItem {
 
     private static final ResourceLocation AUDIO_ELEMENT_TEXTURE = new ResourceLocation("fmaudio", "textures/audio_element.png");
@@ -224,20 +223,19 @@ public class AudioCustomizationItem extends CustomizationItem {
     }
 
     @Override
-    public void render(PoseStack poseStack, Screen screen) {
+    public void render(GuiGraphics graphics, Screen screen) {
 
         if (this.shouldRender()) {
 
             if (isEditorActive()) {
 
                 RenderSystem.enableBlend();
-                RenderUtils.bindTexture(AUDIO_ELEMENT_TEXTURE);
+//                RenderUtils.bindTexture(AUDIO_ELEMENT_TEXTURE);
                 RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-                blit(poseStack, this.getPosX(screen), this.getPosY(screen), 1.0F, 1.0F, this.width, this.height, this.width, this.height);
+                graphics.blit(AUDIO_ELEMENT_TEXTURE, this.getPosX(screen), this.getPosY(screen), 1.0F, 1.0F, this.width, this.height, this.width, this.height);
 
             }
 
-            //TODO übernehmen
             if (ACIHandler.initialResourceReloadFinished) {
                 this.tickAudio();
             }

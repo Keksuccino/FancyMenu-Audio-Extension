@@ -1,6 +1,8 @@
 package de.keksuccino.fmaudio.customization.item;
 
 import de.keksuccino.auudio.audio.AudioClip;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenCompletedEvent;
+import de.keksuccino.fancymenu.events.InitOrResizeScreenEvent;
 import de.keksuccino.fancymenu.menu.button.ButtonCache;
 import de.keksuccino.fancymenu.menu.button.ButtonCachedEvent;
 import de.keksuccino.fancymenu.menu.fancy.MenuCustomization;
@@ -9,23 +11,18 @@ import de.keksuccino.fancymenu.menu.fancy.helper.MenuReloadedEvent;
 import de.keksuccino.fancymenu.menu.fancy.helper.layoutcreator.LayoutEditorScreen;
 import de.keksuccino.fmaudio.FmAudio;
 import de.keksuccino.fmaudio.audio.AudioHandler;
-import de.keksuccino.fmaudio.events.PreScreenInitEvent;
 import de.keksuccino.konkrete.Konkrete;
 import de.keksuccino.konkrete.events.EventPriority;
 import de.keksuccino.konkrete.events.SubscribeEvent;
 import de.keksuccino.konkrete.events.client.ClientTickEvent;
-import de.keksuccino.konkrete.events.client.GuiInitCompletedEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+@SuppressWarnings("all")
 public class ACIHandler {
 
     private static final Logger LOGGER = LogManager.getLogger("fancymenu/fmaudio/AudioCustomizationItemHandler");
@@ -33,15 +30,11 @@ public class ACIHandler {
     public static volatile List<String> currentLayoutAudios = new ArrayList<>();
     public static volatile List<String> lastPlayingAudioSources = new ArrayList<>();
     public static volatile List<String> newLastPlayingAudioSources = new ArrayList<>();
-
     protected static Screen lastScreen = null;
-
     public static boolean initialResourceReloadFinished = false;
-
     protected static Screen lastScreenCustom = null;
     public static boolean isNewCustomGui = false;
     protected static boolean newCustomGuiForTicker = false;
-
     public static Screen lastScreenGlobal = null;
 
     public static void init() {
@@ -49,8 +42,8 @@ public class ACIHandler {
         ACIMuteHandler.init();
     }
 
-    @SubscribeEvent
-    public void onPrePreInit(PreScreenInitEvent e) {
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPrePreInit(InitOrResizeScreenEvent.Pre e) {
         if (!ButtonCache.isCaching()) {
             if (lastScreenCustom != null) {
                 if ((e.getScreen() instanceof CustomGuiBase) && (lastScreenCustom instanceof CustomGuiBase)) {
@@ -95,16 +88,17 @@ public class ACIHandler {
         }
     }
 
+    //TODO übernehmen
     @SubscribeEvent(priority = EventPriority.LOW)
-    public void onInitCompleted(GuiInitCompletedEvent e) {
-        if (!ButtonCache.isCaching() && MenuCustomization.isValidScreen(e.getGui())) {
+    public void onInitCompleted(InitOrResizeScreenCompletedEvent e) {
+        if (!ButtonCache.isCaching() && MenuCustomization.isValidScreen(e.getScreen())) {
             lastScreenGlobal = Minecraft.getInstance().screen;
         }
     }
 
     @SubscribeEvent
-    public void onScreenInitPre(GuiScreenEvent.InitGuiEvent.Pre e) {
-        if (e.getGui() instanceof LayoutEditorScreen) {
+    public void onScreenInitPre(InitOrResizeScreenEvent.Pre e) {
+        if (e.getScreen() instanceof LayoutEditorScreen) {
             AudioHandler.stopAll();
         }
     }

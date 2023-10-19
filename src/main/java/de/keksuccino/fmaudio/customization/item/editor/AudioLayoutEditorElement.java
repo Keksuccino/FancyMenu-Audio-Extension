@@ -1,6 +1,6 @@
 package de.keksuccino.fmaudio.customization.item.editor;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.api.item.CustomizationItem;
 import de.keksuccino.fancymenu.api.item.CustomizationItemContainer;
 import de.keksuccino.fancymenu.api.item.LayoutEditorElement;
@@ -59,7 +59,7 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 this.setMessage(Locals.localize("fancymenu.fmaudio.audio.channel", i.channel.getName().toUpperCase()));
                 super.render(p_93657_, p_93658_, p_93659_, p_93660_);
             }
@@ -74,7 +74,7 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.oncePerSession) {
                     this.active = false;
                 } else {
@@ -98,7 +98,7 @@ public class AudioLayoutEditorElement extends LayoutEditorElement {
             }
         }) {
             @Override
-            public void render(PoseStack p_93657_, int p_93658_, int p_93659_, float p_93660_) {
+            public void render(GuiGraphics p_93657_, int p_93658_, int p_93659_, float p_93660_) {
                 if (i.oncePerSession) {
                     this.setMessage(Locals.localize("fancymenu.fmaudio.audio.once_per_session.on"));
                 } else {

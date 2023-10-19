@@ -1,15 +1,16 @@
 package de.keksuccino.fmaudio;
 
-import com.mojang.blaze3d.vertex.PoseStack;
+import de.keksuccino.fancymenu.events.RenderScreenEvent;
+import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.FMConfigScreen;
 import de.keksuccino.fancymenu.menu.fancy.helper.ui.UIBase;
 import de.keksuccino.konkrete.events.SubscribeEvent;
-import de.keksuccino.konkrete.events.client.GuiScreenEvent;
 import de.keksuccino.konkrete.gui.content.AdvancedImageButton;
 import de.keksuccino.konkrete.localization.Locals;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 
+@SuppressWarnings("all")
 public class EventHandler {
 
     protected static final ResourceLocation SETTINGS_ICON_LOCATION = new ResourceLocation("fmaudio", "textures/settings_button.png");
@@ -22,14 +23,14 @@ public class EventHandler {
             Minecraft.getInstance().setScreen(new FmAudioConfigScreen(Minecraft.getInstance().screen));
         }) {
             @Override
-            public void render(PoseStack matrixStack, int mouseX, int mouseY, float partialTicks) {
+            public void render(GuiGraphics graphicsStack, int mouseX, int mouseY, float partialTicks) {
                 this.setDescription(Locals.localize("fancymenu.fmaudio.config"));
                 if (this.isHoveredOrFocused()) {
                     this.setX(-2);
                 } else {
                     this.setX(-10);
                 }
-                super.render(matrixStack, mouseX, mouseY, partialTicks);
+                super.render(graphicsStack, mouseX, mouseY, partialTicks);
             }
         };
         UIBase.colorizeButton(this.openSettingsButton);
@@ -37,11 +38,11 @@ public class EventHandler {
     }
 
     @SubscribeEvent
-    public void onDrawScreenPost(GuiScreenEvent.DrawScreenEvent.Post e) {
+    public void onDrawScreenPost(RenderScreenEvent.Post e) {
 
-        if (e.getGui() instanceof FMConfigScreen) {
+        if (e.getScreen() instanceof FMConfigScreen) {
 
-            this.openSettingsButton.render(e.getMatrixStack(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
+            this.openSettingsButton.render(e.getGuiGraphics(), e.getMouseX(), e.getMouseY(), e.getRenderPartialTicks());
 
         }
 

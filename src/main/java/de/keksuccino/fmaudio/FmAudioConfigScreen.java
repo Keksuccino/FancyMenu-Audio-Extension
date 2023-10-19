@@ -3,6 +3,7 @@ package de.keksuccino.fmaudio;
 import de.keksuccino.konkrete.config.ConfigEntry;
 import de.keksuccino.konkrete.gui.screens.ConfigScreen;
 import de.keksuccino.konkrete.localization.Locals;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 
 public class FmAudioConfigScreen extends ConfigScreen {
